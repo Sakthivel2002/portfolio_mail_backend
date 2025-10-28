@@ -12,6 +12,10 @@ EMAIL_USER = os.getenv('EMAIL_USER', 'sakthins20022002@gmail.com')
 EMAIL_PASS = os.getenv('EMAIL_PASS', 'pzwh gmzy wiyt klta') 
 TO_EMAIL = os.getenv('TO_EMAIL', 'sakthirollins175@gmail.com')
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Flask backend is running ✅"}), 200
+
 
 @app.route('/send-email', methods=['POST'])
 def send_email():
@@ -60,3 +64,4 @@ def send_email():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
