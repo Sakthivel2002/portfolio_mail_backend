@@ -26,7 +26,7 @@ def send_email():
 
     data = request.get_json()
     name = data.get('name')
-    email = data.get('email')
+    email = sakthins20022002@gmail.com
     subject = data.get('subject', 'New Contact Form Submission')
     message = data.get('message')
 
@@ -35,7 +35,7 @@ def send_email():
 
     try:
         payload = {
-            "sender": {"email": email, "name": name},
+            "sender": {"email": sakthins20022002@gmail.com, "name": name},
             "to": [{"email": TO_EMAIL}],
             "subject": subject,
             "htmlContent": f"""
@@ -74,3 +74,4 @@ def send_email():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
