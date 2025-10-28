@@ -5,8 +5,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 
+from flask_cors import CORS
+
 app = Flask(__name__)
-CORS(app)   
+CORS(app, origins=["https://charming-quokka-d15fb8.netlify.app"])
+
 
 EMAIL_USER = os.getenv('EMAIL_USER', 'sakthins20022002@gmail.com')
 EMAIL_PASS = os.getenv('EMAIL_PASS', 'pzwh gmzy wiyt klta') 
@@ -64,4 +67,5 @@ def send_email():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
