@@ -5,10 +5,13 @@ import os
 
 app = Flask(__name__)
 
+# Allow your Netlify frontend
 CORS(app, resources={r"/*": {"origins": "https://charming-quokka-d15fb8.netlify.app"}}, supports_credentials=True)
 
-BREVO_API_KEY = os.getenv('BREVO_API_KEY')  
+# Environment variables
+BREVO_API_KEY = os.getenv('BREVO_API_KEY')   
 TO_EMAIL = os.getenv('TO_EMAIL', 'sakthirollins175@gmail.com')
+SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'sakthins20022002@gmail.com')  
 
 @app.route('/', methods=['GET'])
 def home():
@@ -26,22 +29,23 @@ def send_email():
 
     data = request.get_json()
     name = data.get('name')
-    email = sakthins20022002@gmail.com
+    sender_email = data.get('email') 
     subject = data.get('subject', 'New Contact Form Submission')
     message = data.get('message')
 
-    if not name or not email or not message:
+    if not name or not sender_email or not message:
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
 
     try:
         payload = {
-            "sender": {"email": sakthins20022002@gmail.com, "name": name},
+            "sender": {"email": SENDER_EMAIL, "name": name}, 
+            "replyTo": {"email": sender_email, "name": name}, 
             "to": [{"email": TO_EMAIL}],
             "subject": subject,
             "htmlContent": f"""
                 <h3>New Contact Form Message</h3>
                 <p><b>Name:</b> {name}</p>
-                <p><b>Email:</b> {email}</p>
+                <p><b>Email:</b> {sender_email}</p>
                 <p><b>Subject:</b> {subject}</p>
                 <p><b>Message:</b><br>{message}</p>
             """
@@ -60,13 +64,13 @@ def send_email():
             res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
             return res, 200
         else:
-            print("Brevo API error:", response.text)
+            print("❌ Brevo API error:", response.text)
             res = jsonify({'success': False, 'error': 'Email sending failed', 'details': response.text})
             res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
             return res, 500
 
     except Exception as e:
-        print('Error:', e)
+        print('❌ Error:', e)
         res = jsonify({'success': False, 'error': str(e)})
         res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
         return res, 500
@@ -74,4 +78,3 @@ def send_email():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
