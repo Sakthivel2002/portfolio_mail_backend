@@ -1,26 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 import os
 
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "https://charming-quokka-d15fb8.netlify.app"}}, supports_credentials=True)
 
-EMAIL_USER = os.getenv('EMAIL_USER', 'sakthins20022002@gmail.com')
-EMAIL_PASS = os.getenv('EMAIL_PASS', 'pzwh gmzy wiyt klta')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY')  
 TO_EMAIL = os.getenv('TO_EMAIL', 'sakthirollins175@gmail.com')
 
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({"message": "Flask backend is running ✅"}), 200
 
+
 @app.route('/send-email', methods=['POST', 'OPTIONS'])
 def send_email():
     if request.method == 'OPTIONS':
-        # Handles preflight request
         response = jsonify({'message': 'CORS preflight successful'})
         response.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
@@ -37,37 +34,42 @@ def send_email():
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
 
     try:
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_USER
-        msg['To'] = TO_EMAIL
-        msg['Subject'] = subject
+        payload = {
+            "sender": {"email": email, "name": name},
+            "to": [{"email": TO_EMAIL}],
+            "subject": subject,
+            "htmlContent": f"""
+                <h3>New Contact Form Message</h3>
+                <p><b>Name:</b> {name}</p>
+                <p><b>Email:</b> {email}</p>
+                <p><b>Subject:</b> {subject}</p>
+                <p><b>Message:</b><br>{message}</p>
+            """
+        }
 
-        body = f"""
-        You have a new message from your portfolio contact form:
+        headers = {
+            "accept": "application/json",
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json"
+        }
 
-        Name: {name}
-        Email: {email}
-        Subject: {subject}
+        response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers)
 
-        Message:
-        {message}
-        """
-        msg.attach(MIMEText(body, 'plain'))
-
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            server.starttls()
-            server.login(EMAIL_USER, EMAIL_PASS)
-            server.send_message(msg)
-
-        response = jsonify({'success': True})
-        response.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
-        return response, 200
+        if response.status_code == 201:
+            res = jsonify({'success': True, 'message': 'Email sent successfully ✅'})
+            res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
+            return res, 200
+        else:
+            print("Brevo API error:", response.text)
+            res = jsonify({'success': False, 'error': 'Email sending failed', 'details': response.text})
+            res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
+            return res, 500
 
     except Exception as e:
         print('Error:', e)
-        response = jsonify({'success': False, 'error': str(e)})
-        response.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
-        return response, 500
+        res = jsonify({'success': False, 'error': str(e)})
+        res.headers.add("Access-Control-Allow-Origin", "https://charming-quokka-d15fb8.netlify.app")
+        return res, 500
 
 
 if __name__ == '__main__':
